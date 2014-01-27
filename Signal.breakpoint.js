@@ -41,7 +41,6 @@
 		_options,
 		_defaults = {
 			classBody: true,
-			attrBody: true,
 			throttle: 100,
 			breakpoints: [ 320, 480, 768, 992, 1200 ]
 		};
@@ -161,7 +160,6 @@
 		if (!breakpoint || breakpoint <= 0) { return; }
 
 		if (_options.classBody) { _getBody().addClass('breakpoint-' + breakpoint); }
-		if (_options.attrBody) { _getBody().attr('data-breakpoint', breakpoint); }
 
 		_observable.trigger('enter' + breakpoint, breakpoint);
 		_observable.trigger('enter', breakpoint);
@@ -171,7 +169,6 @@
 		if (!breakpoint || breakpoint <= 0) { return; }
 
 		if (_options.classBody) { _getBody().removeClass('breakpoint-' + breakpoint); }
-		if (_options.attrBody) { _getBody().removeAttr('data-breakpoint'); }
 
 		_observable.trigger('exit' + breakpoint, breakpoint);
 		_observable.trigger('exit', breakpoint);
