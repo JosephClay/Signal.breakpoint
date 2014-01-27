@@ -62,6 +62,10 @@
 		_enterBreakpoint(_currentBreakpoint);
 	};
 
+	var _getPoint = function() {
+		return (_currentBreakpoint = _determineCurrentBreakpoint());
+	};
+
 	var _numericSort = function(arr) {
 		return arr.sort(function(a, b) {
 			return a - b;
@@ -182,6 +186,7 @@
 
 	/** Expose to jquery */
 	_observable.set = _set;
+	_observable.getPoint = _getPoint;
 	_observable.reset = _reset;
 	
 	Signal.breakpoint = _observable;
