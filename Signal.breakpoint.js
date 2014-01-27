@@ -45,9 +45,9 @@
 			breakpoints: [ 320, 480, 768, 992, 1200 ]
 		};
 
-	// Set | Reset ------------------------------
+	// Configure | Get | Reset ------------------------------
 
-	var _set = function(settings) {
+	var _configure = function(settings) {
 		_options = $.extend({}, _defaults, settings);
 		
 		/**
@@ -62,7 +62,11 @@
 		_enterBreakpoint(_currentBreakpoint);
 	};
 
-	var _getPoint = function() {
+	var _getConfig = function() {
+		return JSON.parse(JSON.stringify(_options));
+	};
+
+	var _getCurrent = function() {
 		return (_currentBreakpoint = _determineCurrentBreakpoint());
 	};
 
@@ -185,8 +189,9 @@
 	};
 
 	/** Expose to jquery */
-	_observable.set = _set;
-	_observable.getPoint = _getPoint;
+	_observable.configure = _configure;
+	_observable.getConfig = _getConfig;
+	_observable.getCurrent = _getCurrent;
 	_observable.reset = _reset;
 	
 	Signal.breakpoint = _observable;
