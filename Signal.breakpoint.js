@@ -41,7 +41,6 @@
 		_options,
 		_defaults = {
 			classBody: true,
-			throttle: 100,
 			breakpoints: [ 320, 480, 768, 992, 1200 ]
 		};
 
@@ -93,9 +92,7 @@
 		 */
 		Signal.window.on('resize.breakpoint', function(e) {
 			_width = e.width; // keep width up-to-date
-
-			clearTimeout(_timeout);
-			_timeout = setTimeout(_resize, _options.throttle);
+			_resize();
 		});
 		
 		_window.on('focus.breakpoint', _resize);
