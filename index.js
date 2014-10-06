@@ -73,12 +73,6 @@
         /** @type {Number} */
         _currentBreakpoint,
 
-        /**
-         * Timeout used for throttling
-         * @type {timeout}
-         */
-        _timeout,
-
         _options = {},
         _defaults = {
             classBody: true,
@@ -134,7 +128,6 @@
         _unbind();
         _exitBreakpoint(_currentBreakpoint);
         _currentBreakpoint = null;
-        clearTimeout(_timeout);
     };
 
     // Bind | Unbind ------------------------------
