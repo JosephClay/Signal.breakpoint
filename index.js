@@ -31,207 +31,210 @@
 
 })('breakpoint', function(signal, signalWindow) {
 
-	/* Mini jQuery */
-	var $ = function(elem) { this.elem = elem; };
-	$.prototype = {
-		on: function(eventName, eventHandler) {
-			this.elem.addEventListener(eventName, eventHandler);
-		},
+    /* Mini jQuery */
+    var $ = function(elem) { return new Dom(elem); },
 
-		off: function(eventName, eventHandler) {
-			this.elem.addEventListener(eventName, eventHandler);
-		},
+        Dom = function(elem) { this.elem = elem; };
 
-		addClass: function(className) {
-			var elem = this.elem;
-			if (elem.classList) {
-	  			return elem.classList.add(className);
-			}
+    Dom.prototype = {
+        on: function(eventName, eventHandler) {
+            this.elem.addEventListener(eventName, eventHandler);
+        },
 
-	  		elem.className += ' ' + className;
-		},
-		removeClass: function(className) {
-			var elem = this.elem;
-			if (elem.classList) {
-  				return elem.classList.remove(className);
-			}
+        off: function(eventName, eventHandler) {
+            this.elem.addEventListener(eventName, eventHandler);
+        },
 
-  			elem.className = elem.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
-		}
-	};
+        addClass: function(className) {
+            var elem = this.elem;
+            if (elem.classList) {
+                return elem.classList.add(className);
+            }
 
-	var _observable = signal.construct(),
+            elem.className += ' ' + className;
+        },
+        removeClass: function(className) {
+            var elem = this.elem;
+            if (elem.classList) {
+                return elem.classList.remove(className);
+            }
 
-		_window = $(window),
+            elem.className = elem.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
+        }
+    };
 
-		/** @type {Number} */
-		_width = signalWindow.getDimensions().width,
+    var _observable = signal.construct(),
 
-		/** @type {Number} */
-		_currentBreakpoint,
+        _window = $(window),
 
-		/**
-		 * Timeout used for throttling
-		 * @type {timeout}
-		 */
-		_timeout,
+        /** @type {Number} */
+        _width = signalWindow.getDimensions().width,
 
-		_options = {},
-		_defaults = {
-			classBody: true,
-			breakpoints: [ 320, 480, 768, 992, 1200 ]
-		},
+        /** @type {Number} */
+        _currentBreakpoint,
 
-		/**
-		 * Body, only needed if changing css classes
-		 * @type {jQuery}
-		 */
-		_body = (function() {
-			var body = null;
-			return function() {
-				// Store the body once
-				return body || (body = $(document.body));
-			};
-		}());
+        /**
+         * Timeout used for throttling
+         * @type {timeout}
+         */
+        _timeout,
 
-	// Configure | Get | Reset ------------------------------
+        _options = {},
+        _defaults = {
+            classBody: true,
+            breakpoints: [ 320, 480, 768, 992, 1200 ]
+        },
 
-	var _configure = function(settings) {
-		var key;
-		for (key in defaults) { _options[key] = _defaults[key]; }
-		for (key in settings) { _options[key] = settings[key]; }
+        /**
+         * Body, only needed if changing css classes
+         * @type {jQuery}
+         */
+        _body = (function() {
+            var body = null;
+            return function() {
+                // Store the body once
+                return body || (body = $(document.body));
+            };
+        }());
 
-		/**
-		 * Breakpoints are sorted so that smaller points
-		 * fired in early and larger ones fired out early,
-		 * which are the main use cases.
-		 */
-		_options.breakpoints = _numericSort(_options.breakpoints);
+    // Configure | Get | Reset ------------------------------
 
-		_bind();
-		_currentBreakpoint = _determineCurrentBreakpoint();
-		_enterBreakpoint(_currentBreakpoint);
-	};
+    var _configure = function(settings) {
+        var key;
+        for (key in _defaults) { _options[key] = _defaults[key]; }
+        for (key in settings) { _options[key] = settings[key]; }
 
-	var _getConfig = function() {
-		return JSON.parse(JSON.stringify(_options));
-	};
+        /**
+         * Breakpoints are sorted so that smaller points
+         * fired in early and larger ones fired out early,
+         * which are the main use cases.
+         */
+        _options.breakpoints = _numericSort(_options.breakpoints);
 
-	var _getCurrent = function() {
-		return (_currentBreakpoint = _determineCurrentBreakpoint());
-	};
+        _bind();
+        _currentBreakpoint = _determineCurrentBreakpoint();
+        _enterBreakpoint(_currentBreakpoint);
+    };
 
-	var _numericSort = function(arr) {
-		return arr.sort(function(a, b) {
-			return a - b;
-		});
-	};
+    var _getConfig = function() {
+        return JSON.parse(JSON.stringify(_options));
+    };
 
-	var _reset = function() {
-		_unbind();
-		_exitBreakpoint(_currentBreakpoint);
-		_currentBreakpoint = null;
-		clearTimeout(_timeout);
-	};
+    var _getCurrent = function() {
+        return (_currentBreakpoint = _determineCurrentBreakpoint());
+    };
 
-	// Bind | Unbind ------------------------------
+    var _numericSort = function(arr) {
+        return arr.sort(function(a, b) {
+            return a - b;
+        });
+    };
 
-	var _bind = function() {
-		/**
-		 * Instead of an interval set to run every 250ms,
-		 * the 250ms is a configurable option to throttle
-		 * the resize event.
-		 */
-		signalWindow.on('resize.breakpoint', function(e) {
-			_width = e.width; // keep width up-to-date
-			_resize();
-		});
+    var _reset = function() {
+        _unbind();
+        _exitBreakpoint(_currentBreakpoint);
+        _currentBreakpoint = null;
+        clearTimeout(_timeout);
+    };
 
-		_window.on('focus', _resize);
-	};
+    // Bind | Unbind ------------------------------
 
-	var _unbind = function() {
-		signalWindow.off('resize.breakpoint');
-		_window.off('focus', _resize);
-	};
+    var _bind = function() {
+        /**
+         * Instead of an interval set to run every 250ms,
+         * the 250ms is a configurable option to throttle
+         * the resize event.
+         */
+        signalWindow.on('resize.breakpoint', function(e) {
+            _width = e.width; // keep width up-to-date
+            _resize();
+        });
 
-	/**
-	 * Loop through breakpoints, going from the smallest
-	 * to the largest, to determine which breakpoint the window
-	 * is currently at.
-	 * @return {Number} breakpoint || -1
-	 */
-	var _determineCurrentBreakpoint = function() {
-		var breakpoints = _options.breakpoints,
-			idx = 0, length = breakpoints.length,
+        _window.on('focus', _resize);
+    };
 
-			prevbreakpoint,
-			breakpoint,
-			nextbreakpoint;
+    var _unbind = function() {
+        signalWindow.off('resize.breakpoint');
+        _window.off('focus', _resize);
+    };
 
-		for (; idx < length; idx++) {
-			prevbreakpoint =  breakpoints[idx - 1];
-			breakpoint = breakpoints[idx];
-			nextbreakpoint = breakpoints[idx + 1];
+    /**
+     * Loop through breakpoints, going from the smallest
+     * to the largest, to determine which breakpoint the window
+     * is currently at.
+     * @return {Number} breakpoint || -1
+     */
+    var _determineCurrentBreakpoint = function() {
+        var breakpoints = _options.breakpoints,
+            idx = 0, length = breakpoints.length,
 
-			// this is the first breakpoint and we're at it
-			if (!prevbreakpoint && _width <= breakpoint) {
-				return breakpoint;
-			}
+            prevbreakpoint,
+            breakpoint,
+            nextbreakpoint;
 
-			// no next breakpoint. window is at the largest breakpoint available
-			if (!nextbreakpoint) { return breakpoint; }
+        for (; idx < length; idx++) {
+            prevbreakpoint =  breakpoints[idx - 1];
+            breakpoint = breakpoints[idx];
+            nextbreakpoint = breakpoints[idx + 1];
 
-			// window is between two breakpoints
-			if (_width >= breakpoint && _width < nextbreakpoint) {
-				return breakpoint;
-			}
-		}
+            // this is the first breakpoint and we're at it
+            if (!prevbreakpoint && _width <= breakpoint) {
+                return breakpoint;
+            }
 
-		return -1;
-	};
+            // no next breakpoint. window is at the largest breakpoint available
+            if (!nextbreakpoint) { return breakpoint; }
 
-	/**
-	 * When the window resizes, determine if the breakpoint
-	 * has changed. If it has, exit from the current breakpoint
-	 * and enter the new one
-	 */
-	var _resize = function() {
-		var resizeBreakpoint = _determineCurrentBreakpoint();
-		// No change in breakpoint, stop
-		if (resizeBreakpoint === _currentBreakpoint) { return; }
+            // window is between two breakpoints
+            if (_width >= breakpoint && _width < nextbreakpoint) {
+                return breakpoint;
+            }
+        }
 
-		// Breakpoint has changed
-		_exitBreakpoint(_currentBreakpoint);
-		_enterBreakpoint(resizeBreakpoint);
-		_currentBreakpoint = resizeBreakpoint;
-	};
+        return -1;
+    };
 
-	// Enter | Exit ------------------------------
+    /**
+     * When the window resizes, determine if the breakpoint
+     * has changed. If it has, exit from the current breakpoint
+     * and enter the new one
+     */
+    var _resize = function() {
+        var resizeBreakpoint = _determineCurrentBreakpoint();
+        // No change in breakpoint, stop
+        if (resizeBreakpoint === _currentBreakpoint) { return; }
 
-	var _enterBreakpoint = function(breakpoint) {
-		if (!breakpoint || breakpoint <= 0) { return; }
+        // Breakpoint has changed
+        _exitBreakpoint(_currentBreakpoint);
+        _enterBreakpoint(resizeBreakpoint);
+        _currentBreakpoint = resizeBreakpoint;
+    };
 
-		if (_options.classBody) { _body().addClass('breakpoint-' + breakpoint); }
+    // Enter | Exit ------------------------------
 
-		_observable.trigger('enter' + breakpoint, breakpoint);
-		_observable.trigger('enter', breakpoint);
-	};
+    var _enterBreakpoint = function(breakpoint) {
+        if (!breakpoint || breakpoint <= 0) { return; }
 
-	var _exitBreakpoint = function(breakpoint) {
-		if (!breakpoint || breakpoint <= 0) { return; }
+        if (_options.classBody) { _body().addClass('breakpoint-' + breakpoint); }
 
-		if (_options.classBody) { _body().removeClass('breakpoint-' + breakpoint); }
+        _observable.trigger('enter' + breakpoint, breakpoint);
+        _observable.trigger('enter', breakpoint);
+    };
 
-		_observable.trigger('exit' + breakpoint, breakpoint);
-		_observable.trigger('exit', breakpoint);
-	};
+    var _exitBreakpoint = function(breakpoint) {
+        if (!breakpoint || breakpoint <= 0) { return; }
 
-	_observable.configure = _configure;
-	_observable.getConfig = _getConfig;
-	_observable.getCurrent = _getCurrent;
-	_observable.reset = _reset;
+        if (_options.classBody) { _body().removeClass('breakpoint-' + breakpoint); }
 
-	return _observable;
+        _observable.trigger('exit' + breakpoint, breakpoint);
+        _observable.trigger('exit', breakpoint);
+    };
+
+    _observable.configure = _configure;
+    _observable.getConfig = _getConfig;
+    _observable.getCurrent = _getCurrent;
+    _observable.reset = _reset;
+
+    return _observable;
 
 });
