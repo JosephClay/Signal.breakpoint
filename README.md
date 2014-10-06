@@ -1,4 +1,6 @@
-Signal.breakpoint
+signal-breakpoint
 =================
 
-Custom breakpoint events
+custom breakpoint events
+
+`npm install signal-breakpoint`
