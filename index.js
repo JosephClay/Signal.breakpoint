@@ -8,7 +8,7 @@
  * one giant function, where none of the jQuery variables
  * (notably window and body) were stored and were constantly
  * re-retrieved from the DOM.
- * 
+ *
  *  • Updated to work on window.resize which allows binding and unbinding of the window.
  *  • Array indexes were incorrectly being looped through by a for in statement, changed to for loop.
  *  • Added functionality for the plugin to clean its classes off of the body.
@@ -16,19 +16,57 @@
  *  • Sorted breakpoints on start instead of continually and setup a reverse loop to remove a sort step.
  *  • Variables are stored on start.
  *
- * Documentation:
+ * Some documentation:
  * http://xoxco.com/projects/code/breakpoints
  */
-(function(Signal, $, window, undefined) {
+(function(name, factory) {
 
-	var _observable = Signal.core.construct(),
-		
-		/** @type {jQuery} */
+    if (typeof define === 'function') { // RequireJS
+        define(['signal-js', 'signal-window'], factory);
+    } else if (typeof module !== 'undefined' && module.exports) { // CommonJS
+        module.exports = factory(require('signal-js'), require('signal-window'));
+    } else { // Browser
+        this.signal[name] = factory(this.signal, this.signal.window);
+    }
+
+})('breakpoint', function(signal, signalWindow) {
+
+	/* Mini jQuery */
+	var $ = function(elem) { this.elem = elem; };
+	$.prototype = {
+		on: function(eventName, eventHandler) {
+			this.elem.addEventListener(eventName, eventHandler);
+		},
+
+		off: function(eventName, eventHandler) {
+			this.elem.addEventListener(eventName, eventHandler);
+		},
+
+		addClass: function(className) {
+			var elem = this.elem;
+			if (elem.classList) {
+	  			return elem.classList.add(className);
+			}
+
+	  		elem.className += ' ' + className;
+		},
+		removeClass: function(className) {
+			var elem = this.elem;
+			if (elem.classList) {
+  				return elem.classList.remove(className);
+			}
+
+  			elem.className = elem.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
+		}
+	};
+
+	var _observable = signal.construct(),
+
 		_window = $(window),
 
 		/** @type {Number} */
-		_width = Signal.window.getDimensions().width,
-		
+		_width = signalWindow.getDimensions().width,
+
 		/** @type {Number} */
 		_currentBreakpoint,
 
@@ -37,18 +75,32 @@
 		 * @type {timeout}
 		 */
 		_timeout,
-		
-		_options,
+
+		_options = {},
 		_defaults = {
 			classBody: true,
 			breakpoints: [ 320, 480, 768, 992, 1200 ]
-		};
+		},
+
+		/**
+		 * Body, only needed if changing css classes
+		 * @type {jQuery}
+		 */
+		_body = (function() {
+			var body = null;
+			return function() {
+				// Store the body once
+				return body || (body = $(document.body));
+			};
+		}());
 
 	// Configure | Get | Reset ------------------------------
 
 	var _configure = function(settings) {
-		_options = $.extend({}, _defaults, settings);
-		
+		var key;
+		for (key in defaults) { _options[key] = _defaults[key]; }
+		for (key in settings) { _options[key] = settings[key]; }
+
 		/**
 		 * Breakpoints are sorted so that smaller points
 		 * fired in early and larger ones fired out early,
@@ -76,7 +128,7 @@
 	};
 
 	var _reset = function() {
-		_unbind();		
+		_unbind();
 		_exitBreakpoint(_currentBreakpoint);
 		_currentBreakpoint = null;
 		clearTimeout(_timeout);
@@ -90,17 +142,17 @@
 		 * the 250ms is a configurable option to throttle
 		 * the resize event.
 		 */
-		Signal.window.on('resize.breakpoint', function(e) {
+		signalWindow.on('resize.breakpoint', function(e) {
 			_width = e.width; // keep width up-to-date
 			_resize();
 		});
-		
-		_window.on('focus.breakpoint', _resize);
+
+		_window.on('focus', _resize);
 	};
 
 	var _unbind = function() {
-		Signal.window.off('resize.breakpoint');
-		_window.off('focus.breakpoint');
+		signalWindow.off('resize.breakpoint');
+		_window.off('focus', _resize);
 	};
 
 	/**
@@ -160,7 +212,7 @@
 	var _enterBreakpoint = function(breakpoint) {
 		if (!breakpoint || breakpoint <= 0) { return; }
 
-		if (_options.classBody) { _getBody().addClass('breakpoint-' + breakpoint); }
+		if (_options.classBody) { _body().addClass('breakpoint-' + breakpoint); }
 
 		_observable.trigger('enter' + breakpoint, breakpoint);
 		_observable.trigger('enter', breakpoint);
@@ -169,28 +221,17 @@
 	var _exitBreakpoint = function(breakpoint) {
 		if (!breakpoint || breakpoint <= 0) { return; }
 
-		if (_options.classBody) { _getBody().removeClass('breakpoint-' + breakpoint); }
+		if (_options.classBody) { _body().removeClass('breakpoint-' + breakpoint); }
 
 		_observable.trigger('exit' + breakpoint, breakpoint);
 		_observable.trigger('exit', breakpoint);
 	};
 
-	/**
-	 * Body, only needed if changing css classes
-	 * @type {jQuery}
-	 */
-	var _body = null;
-	var _getBody = function() {
-		// Store the body once
-		return _body || (_body = $('body'));
-	};
-
-	/** Expose to jquery */
 	_observable.configure = _configure;
 	_observable.getConfig = _getConfig;
 	_observable.getCurrent = _getCurrent;
 	_observable.reset = _reset;
-	
-	Signal.breakpoint = _observable;
 
-}(Signal, $, window));
+	return _observable;
+
+});
