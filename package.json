@@ -2,7 +2,7 @@
   "name": "signal-breakpoint",
   "version": "1.0.0",
   "description": "custom breakpoint events",
-  "main": "index.js",
+  "main": "signal-breakpoint.js",
   "scripts": {},
   "repository": {
     "type": "git",
