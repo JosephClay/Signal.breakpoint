@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/JosephClay/signal-breakpoint",
   "dependencies": {
-    "signal-js": "0.0.3",
-    "signal-window": "0.0.3"
+    "signal-js": "^1.0.0",
+    "signal-window": "^1.0.0"
   }
 }
