@@ -1,6 +1,6 @@
 {
   "name": "signal-breakpoint",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "custom breakpoint events",
   "main": "signal-breakpoint.js",
   "scripts": {},
