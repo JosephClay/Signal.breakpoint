@@ -63,7 +63,7 @@
         }
     };
 
-    var _observable = signal.construct(),
+    var observable = signal.construct(),
 
         _window = $(window),
 
@@ -210,8 +210,8 @@
 
         if (_options.classBody) { _body().addClass('breakpoint-' + breakpoint); }
 
-        _observable.trigger('enter' + breakpoint, breakpoint);
-        _observable.trigger('enter', breakpoint);
+        observable.trigger('enter' + breakpoint, breakpoint);
+        observable.trigger('enter', breakpoint);
     };
 
     var _exitBreakpoint = function(breakpoint) {
@@ -219,15 +219,15 @@
 
         if (_options.classBody) { _body().removeClass('breakpoint-' + breakpoint); }
 
-        _observable.trigger('exit' + breakpoint, breakpoint);
-        _observable.trigger('exit', breakpoint);
+        observable.trigger('exit' + breakpoint, breakpoint);
+        observable.trigger('exit', breakpoint);
     };
 
-    _observable.configure = _configure;
-    _observable.getConfig = _getConfig;
-    _observable.getCurrent = _getCurrent;
-    _observable.reset = _reset;
+    observable.configure = _configure;
+    observable.getConfig = _getConfig;
+    observable.getCurrent = _getCurrent;
+    observable.reset = _reset;
 
-    return _observable;
+    return observable;
 
 });
