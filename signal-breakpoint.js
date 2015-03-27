@@ -63,7 +63,7 @@
         }
     };
 
-    var observable = signal.construct(),
+    var observable = signal(),
 
         _window = $(window),
 
