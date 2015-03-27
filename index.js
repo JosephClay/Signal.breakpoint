@@ -68,7 +68,7 @@
         _window = $(window),
 
         /** @type {Number} */
-        _width = signalWindow.getDimensions().width,
+        _width = signalWindow.dimensions().width,
 
         /** @type {Number} */
         _currentBreakpoint,
